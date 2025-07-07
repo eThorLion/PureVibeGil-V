@@ -64,8 +64,8 @@
                                         תגובה</button>
                                     <button class="action-btn share-btn">📤 שיתוף</button>
                                 </div>
-                                <form dir="rtl" id="commentForm-<%= post._id %>" action="/comment/<%= post._id %>" method="POST"
-                                    class="comment-form mt-3" style="display: none;">
+                                <form dir="rtl" id="commentForm-<%= post._id %>" action="/comment/<%= post._id %>"
+                                    method="POST" class="comment-form mt-3" style="display: none;">
                                     <div class="mb-2">
                                         <input type="text" name="commenter" class="form-control" placeholder="שמך"
                                             value="<%-name%>" hidden required>
@@ -293,48 +293,52 @@
             const popup = document.getElementById('popup');
             popup.classList.add('hide');
 
-            document.addEventListener("DOMContentLoaded", function () {
-                const badWords = [
-                    "זונה", "מניאק", "דביל", "מטומטם", "טמבל", "בן זונה",
-                    "כוס", "חרא", "שרמוטה", "סתום", "כלב", "חמור", "שטן",
-                    "זבל", "בהמה", "מפגר", "זין", "יא חתיכת", "אמא שלך", "תמות", "תשרף"
-                ];
+            let badWords = [];
 
-                const normalize = str => str.replace(/\s+/g, '');
+            fetch('/api/curses')
+                .then(res => res.json())
+                .then(data => {
+                    badWords = data;
+                })
+                .catch(err => {
+                    console.error("Failed to load bad words:", err);
+                });
 
-                const commentForms = document.querySelectorAll(".comment-form");
-                commentForms.forEach(form => {
-                    form.addEventListener("submit", function (e) {
-                        const contentInput = form.querySelector("input[name='content']");
-                        const rawContent = contentInput.value;
-                        const normalizedContent = normalize(rawContent);
+            const normalize = str => str.replace(/\s+/g, '');
 
-                        // בדיקה אם קיימת קללה
-                        const hasBadWord = badWords.some(word => normalizedContent.includes(normalize(word)));
+            const commentForms = document.querySelectorAll(".comment-form");
+            commentForms.forEach(form => {
+                form.addEventListener("submit", function (e) {
+                    const contentInput = form.querySelector("input[name='content']");
+                    const rawContent = contentInput.value;
+                    const normalizedContent = normalize(rawContent);
 
-                        // יצירת תיבת שגיאה אם לא קיימת
-                        let errorBox = form.querySelector(".errorBox");
-                        if (!errorBox) {
-                            errorBox = document.createElement("div");
-                            errorBox.className = "errorBox";
-                            errorBox.style.color = "red";
-                            errorBox.style.marginTop = "5px";
-                            errorBox.style.display = "none";
-                            form.insertBefore(errorBox, form.querySelector("button"));
-                        }
+                    const hasBadWord = badWords.some(word =>
+                        normalizedContent.includes(normalize(word))
+                    );
 
-                        if (hasBadWord) {
-                            e.preventDefault();
-                            errorBox.innerText = "🛑 תגובה זו מכילה מילים אסורות. אנא נסח מחדש.";
-                            errorBox.style.display = "block";
-                            contentInput.style.borderColor = "red";
-                        } else {
-                            errorBox.style.display = "none";
-                            contentInput.style.borderColor = ""; // להחזיר לצבע רגיל
-                        }
-                    });
+                    let errorBox = form.querySelector(".errorBox");
+                    if (!errorBox) {
+                        errorBox = document.createElement("div");
+                        errorBox.className = "errorBox";
+                        errorBox.style.color = "red";
+                        errorBox.style.marginTop = "5px";
+                        errorBox.style.display = "none";
+                        form.insertBefore(errorBox, form.querySelector("button"));
+                    }
+
+                    if (hasBadWord) {
+                        e.preventDefault();
+                        errorBox.innerText = "🛑 תגובה זו מכילה מילים אסורות. אנא נסח מחדש.";
+                        errorBox.style.display = "block";
+                        contentInput.style.borderColor = "red";
+                    } else {
+                        errorBox.style.display = "none";
+                        contentInput.style.borderColor = "";
+                    }
                 });
             });
+
 
 
         </script>
