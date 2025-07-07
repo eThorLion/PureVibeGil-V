@@ -24,11 +24,28 @@ async function connectDB() {
     await mongoClient.connect();
     db = mongoClient.db('PureVibe');
     console.log('✅ Connected to MongoDB via MongoClient');
+
+    app.get('/api/curses', async (req, res) => {
+      try {
+        const words = await db.collection('curses').find().toArray();
+        res.json(words.map(w => w.word)); // מחזיר רק את השדה word
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to load bad words' });
+      }
+    });
+
+
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
   }
 }
 connectDB();
+
+const badWordSchema = new mongoose.Schema({
+  word: { type: String, required: true }
+});
+
+const BadWord = mongoose.model('BadWord', badWordSchema, 'curses');
 
 // התחברות למסד עבור Posts (Mongoose)
 mongoose.connect(uri + 'PureVibe', {
@@ -90,7 +107,6 @@ app.post('/comment/:id', async (req, res) => {
     res.status(500).send('שגיאה בשמירת תגובה');
   }
 });
-
 
 app.get('/image/:id', async (req, res) => {
   try {
